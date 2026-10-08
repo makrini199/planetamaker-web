@@ -250,6 +250,7 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
   .hero .eyebrow::before,.hero .eyebrow::after{display:none}
   .hero .eyebrow{justify-content:center;text-align:center}
 }
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -461,8 +462,13 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
         <div><label for="f-budget">Presupuesto estimado (opcional)</label>
           <select id="f-budget" name="budget"><option value="">Prefiero no indicarlo</option><option>Menos de 500 €</option><option>500 – 2.000 €</option><option>2.000 – 10.000 €</option><option>Más de 10.000 €</option></select></div>
       </div>
+      <div class="two">
+        <div><label for="f-design">¿Tienes diseño o archivo?</label>
+          <select id="f-design" name="design"><option>Aún no, necesito diseño</option><option>Sí, archivo STL o 3D</option><option>Sí, plano, boceto o fotos</option></select></div>
+        <div id="f-link-wrap" hidden><label for="f-link">Enlace a tu archivo (opcional)</label><input id="f-link" name="link" inputmode="url" placeholder="Google Drive, WeTransfer, Dropbox..."></div>
+      </div>
       <div><label for="f-msg">Cuéntanos el proyecto *</label><textarea id="f-msg" name="msg" placeholder="Qué pieza necesitas, medidas aproximadas, acabado y para qué se va a usar." required></textarea></div>
-      <p class="hint">¿Tienes archivo, plano o fotos? Mándalos por WhatsApp o email para presupuestar con precisión.</p>
+      <p class="hint" id="f-hint">Si tienes archivo, plano o fotos, pega el enlace de arriba o mándalos por WhatsApp o email después de enviar la solicitud. Aceptamos STL, STEP, OBJ, PDF, DWG e imágenes.</p>
       <label class="check"><input type="checkbox" id="f-priv" required><span>He leído y acepto la <a href="#privacidad" style="text-decoration:underline">política de privacidad</a>. Finalidad: atender tu solicitud y elaborar presupuesto.</span></label>
       <button type="submit" class="btn btn-wa btn-block">Enviar solicitud por WhatsApp</button>
       <div class="ok" id="ok">Se abrirá WhatsApp con tu solicitud ya redactada. Solo tienes que pulsar enviar.</div>
@@ -640,6 +646,8 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
   document.addEventListener("keydown", function(e){ if(e.key === "Escape") setMenu(false); });
 
   // Formulario: redacta el mensaje y abre WhatsApp
+  var dSel = document.getElementById("f-design"), lWrap = document.getElementById("f-link-wrap");
+  dSel.addEventListener("change", function(){ lWrap.hidden = dSel.selectedIndex === 0; });
   var form = document.getElementById("quote"), ok = document.getElementById("ok");
   form.addEventListener("submit", function(e){
     e.preventDefault();
@@ -660,6 +668,7 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
       + "Cantidad: " + f.qty.value + "\n"
       + (f.date.value ? "Fecha límite: " + f.date.value + "\n" : "")
       + (f.budget.value ? "Presupuesto estimado: " + f.budget.value + "\n" : "")
+      + "Diseño/archivo: " + f.design.value + (f.link.value.trim() ? " · Enlace: " + f.link.value.trim() : "") + "\n"
       + "Proyecto: " + f.msg.value;
     ok.style.color = ""; ok.style.borderColor = ""; ok.className = "ok show";
     ok.textContent = "Se abrirá WhatsApp con tu solicitud ya redactada. Solo tienes que pulsar enviar.";
