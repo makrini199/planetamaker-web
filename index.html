@@ -596,7 +596,20 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
   }
   openBtn.addEventListener("click", function(){ setMenu(true); });
   closeBtn.addEventListener("click", function(){ setMenu(false); });
-  menu.addEventListener("click", function(e){ if(e.target.closest("a")) setMenu(false); });
+  menu.addEventListener("click", function(e){
+    var a = e.target.closest("a"); if(!a) return;
+    var h = a.getAttribute("href") || "";
+    setMenu(false);
+    if(h.charAt(0) === "#" && h.length > 1){
+      e.preventDefault();
+      /* esperar a que se libere el bloqueo de scroll del menu y entonces ir a la seccion */
+      setTimeout(function(){
+        var t = document.getElementById(h.slice(1));
+        if(t){ t.scrollIntoView({behavior:"auto", block:"start"}); }
+        try{ history.replaceState(null, "", h); }catch(x){}
+      }, 60);
+    }
+  });
   document.addEventListener("keydown", function(e){ if(e.key === "Escape") setMenu(false); });
 
   // Formulario: redacta el mensaje y abre WhatsApp
