@@ -501,6 +501,7 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
 <section id="cookies" class="legal"><div class="wrap">
   <h2>Política de cookies</h2>
   <p>Este sitio no utiliza cookies de análisis ni de publicidad propias. El mapa de Google Maps incrustado en la sección de contacto puede instalar cookies técnicas o de terceros al cargarse, conforme a la política de Google. Si activamos herramientas de analítica o publicidad en el futuro, lo indicaremos aquí y pediremos tu consentimiento.</p>
+  <p>Si entras desde un enlace con una etiqueta de origen (por ejemplo, <code>?ref=</code>), la web la guarda de forma temporal en tu navegador durante la visita para añadirla a tu mensaje de WhatsApp. No contiene datos personales.</p>
   <p>Puedes bloquear o eliminar las cookies desde la configuración de tu navegador.</p>
   <a class="back" href="#top">← Volver</a>
 </div></section>
@@ -540,7 +541,23 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
     ["Merchandising corporativo","Objetos con tu logo, placas y regalos de empresa."],
     ["Trofeos y premios","Piezas personalizadas con un acabado cuidado."]
   ];
-  function waLink(text){ return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text); }
+  // Origen del contacto: se lee de ?ref=... en el enlace (ej. ?ref=makrinis-meta) y se añade al mensaje de WhatsApp
+  var REF = "";
+  try {
+    var q = new URLSearchParams(location.search).get("ref");
+    if(q){ q = q.toLowerCase().replace(/[^a-z0-9_-]/g,"").slice(0,40); if(q){ REF = q; try{ sessionStorage.setItem("pm_ref", q); }catch(x){} } }
+    if(!REF){ try{ REF = sessionStorage.getItem("pm_ref") || ""; }catch(x){} }
+  } catch(err){}
+  function refLabel(){
+    if(!REF) return "";
+    var m = REF.match(/^makrinis(?:-(.+))?$/);
+    return m ? "MAKRINI'S" + (m[1] ? " · " + m[1] : "") : REF;
+  }
+  function waLink(text){
+    var tag = refLabel();
+    if(tag){ text = text + "\n[Origen: " + tag + "]"; }
+    return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text);
+  }
 
   // Servicios: tarjetas, menú y selector del formulario
   var grid = document.getElementById("services-grid");
