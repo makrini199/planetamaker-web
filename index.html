@@ -220,9 +220,12 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
 .masonry img{width:100%;height:auto;display:block}
 .masonry figcaption{padding:9px 12px 11px;font-size:.84rem;color:var(--muted)}
 @media(min-width:900px){.masonry{columns:3}}
+
+#pm-bg{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
 </style>
 </head>
 <body>
+<canvas id="pm-bg" aria-hidden="true"></canvas>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <radialGradient id="pm-sea" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#5fc3ee"/><stop offset="1" stop-color="#2a8fd0"/></radialGradient>
@@ -622,6 +625,47 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
     ok.textContent = "Se abrirá WhatsApp con tu solicitud ya redactada. Solo tienes que pulsar enviar.";
     window.open(waLink(t), "_blank", "noopener");
   });
+})();
+</script>
+
+<script>
+/* Fondo animado: capas de impresion 3D y boquilla recorriendo la capa */
+(function(){
+  var c=document.getElementById("pm-bg"); if(!c||!c.getContext) return;
+  var x=c.getContext("2d"), W=0,H=0,dpr=1, gap=26, t0=0, raf=0;
+  var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function size(){ dpr=Math.min(window.devicePixelRatio||1,2); W=innerWidth; H=innerHeight; c.width=W*dpr; c.height=H*dpr; x.setTransform(dpr,0,0,dpr,0,0); gap=W<700?22:28; draw(performance.now()); }
+  function draw(t){
+    x.clearRect(0,0,W,H);
+    var off=reduce?0:(t*0.012)%gap;            /* las capas suben despacio */
+    var n=Math.ceil(H/gap)+2, i;
+    for(i=0;i<n;i++){
+      var y=H-(i*gap)+off;
+      var a=0.05+0.05*(1-Math.min(1,Math.abs(y-H*0.35)/(H*0.7)));   /* mas visibles hacia el centro */
+      x.strokeStyle="rgba(255,122,26,"+a.toFixed(3)+")"; x.lineWidth=1;
+      x.beginPath(); x.moveTo(0,y); x.lineTo(W,y); x.stroke();
+    }
+    if(reduce) return;
+    /* boquilla: punto brillante que recorre una capa de lado a lado */
+    var row=Math.floor(H*0.62/gap), ny=H-(row*gap)+off;
+    var period=7000, p=(t%period)/period, dir=(Math.floor(t/period)%2)?1:-1;
+    var nx=(dir>0?p:1-p)*W;
+    var g=x.createRadialGradient(nx,ny,0,nx,ny,70);
+    g.addColorStop(0,"rgba(255,160,70,.55)"); g.addColorStop(1,"rgba(255,122,26,0)");
+    x.fillStyle=g; x.fillRect(nx-70,ny-70,140,140);
+    x.fillStyle="rgba(255,190,120,.9)"; x.beginPath(); x.arc(nx,ny,2.2,0,6.283); x.fill();
+    /* estela de material depositado */
+    var tl=dir>0?Math.max(0,nx-160):nx, tr=dir>0?nx:Math.min(W,nx+160);
+    var lg=x.createLinearGradient(tl,0,tr,0);
+    if(dir>0){lg.addColorStop(0,"rgba(255,122,26,0)");lg.addColorStop(1,"rgba(255,122,26,.7)");}
+    else{lg.addColorStop(0,"rgba(255,122,26,.7)");lg.addColorStop(1,"rgba(255,122,26,0)");}
+    x.strokeStyle=lg; x.lineWidth=2; x.beginPath(); x.moveTo(tl,ny); x.lineTo(tr,ny); x.stroke();
+  }
+  function loop(t){ draw(t); raf=requestAnimationFrame(loop); }
+  function start(){ if(!reduce&&!raf) raf=requestAnimationFrame(loop); }
+  function stop(){ if(raf){ cancelAnimationFrame(raf); raf=0; } }
+  document.addEventListener("visibilitychange",function(){ document.hidden?stop():start(); });
+  addEventListener("resize",size); size(); start();
 })();
 </script>
 </body>
