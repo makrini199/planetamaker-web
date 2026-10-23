@@ -478,7 +478,6 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
       <a class="channel" href="tel:+34614974717"><small>Llámanos</small><b>614 97 47 17</b></a>
       <a class="channel" href="#" data-wa="Hola, quiero hacer una consulta sobre impresión 3D."><small>WhatsApp</small><b>Escríbenos</b></a>
       <a class="channel" href="mailto:planetamaker3d@gmail.com"><small>Email</small><b>planetamaker3d@gmail.com</b></a>
-      <a class="channel" target="_blank" rel="noopener" href="https://www.instagram.com/planetamaker3d"><small>Instagram</small><b>@planetamaker3d</b></a>
       <a class="channel" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=PlanetaMaker+Impresoras+3D+Av.+de+Gibraltar+7+Legan%C3%A9s"><small>Taller (con cita previa)</small><b>Av. de Gibraltar, 7 · Leganés</b></a>
     </div>
     <iframe title="Mapa del taller de PlanetaMaker 3D en Leganés" loading="lazy" src="https://www.google.com/maps?q=Av.+de+Gibraltar+7,+28912+Legan%C3%A9s&output=embed"></iframe>
@@ -550,7 +549,7 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
     <span class="brand brand-lg"><span class="badge" role="img" aria-label="Logo PlanetaMaker 3D"></span><span class="logo">PLANETAMAKER<span>3D</span></span></span>
     <p>Impresión 3D de gran formato para empresas · Av. de Gibraltar, 7, 28912 Leganés (Madrid) · 614 97 47 17 · planetamaker3d@gmail.com</p>
     <div class="links">
-      <a href="https://www.instagram.com/planetamaker3d" target="_blank" rel="noopener">Instagram</a><a href="#aviso-legal">Aviso legal</a><a href="#privacidad">Privacidad</a><a href="#cookies">Cookies</a>
+      <a href="#aviso-legal">Aviso legal</a><a href="#privacidad">Privacidad</a><a href="#cookies">Cookies</a>
     </div>
   </div>
 </footer>
@@ -577,17 +576,35 @@ footer .links a{text-decoration:underline;text-underline-offset:3px}
     ["Merchandising corporativo","Objetos con tu logo, placas y regalos de empresa."],
     ["Trofeos y premios","Piezas personalizadas con un acabado cuidado."]
   ];
-  // Origen del contacto: se lee de ?ref=... en el enlace (ej. ?ref=makrinis-meta) y se añade al mensaje de WhatsApp
-  var REF = "";
+  // Origen del contacto: ?ref=... (ej. ?ref=makrinis-meta), parametros UTM y ids de anuncios (gclid, fbclid).
+  // Se guardan solo en esta visita (sessionStorage) y se anaden al mensaje de WhatsApp.
+  var REF = "", ADS = {};
+  function clean(v, n){ return (v || "").toLowerCase().replace(/[^a-z0-9_.-]/g, "").slice(0, n || 40); }
   try {
-    var q = new URLSearchParams(location.search).get("ref");
-    if(q){ q = q.toLowerCase().replace(/[^a-z0-9_-]/g,"").slice(0,40); if(q){ REF = q; try{ sessionStorage.setItem("pm_ref", q); }catch(x){} } }
+    var sp = new URLSearchParams(location.search);
+    var q = clean(sp.get("ref"));
+    if(q){ REF = q; try{ sessionStorage.setItem("pm_ref", q); }catch(x){} }
     if(!REF){ try{ REF = sessionStorage.getItem("pm_ref") || ""; }catch(x){} }
+    var found = {};
+    ["utm_source","utm_medium","utm_campaign","utm_content","utm_term"].forEach(function(k){ var v = clean(sp.get(k), 50); if(v) found[k] = v; });
+    if(sp.get("gclid")) found.ads = "google-ads";
+    if(sp.get("fbclid")) found.ads = found.ads || "meta-ads";
+    if(Object.keys(found).length){ ADS = found; try{ sessionStorage.setItem("pm_ads", JSON.stringify(found)); }catch(x){} }
+    else { try{ ADS = JSON.parse(sessionStorage.getItem("pm_ads") || "{}") || {}; }catch(x){ ADS = {}; } }
   } catch(err){}
   function refLabel(){
-    if(!REF) return "";
-    var m = REF.match(/^makrinis(?:-(.+))?$/);
-    return m ? "MAKRINI'S" + (m[1] ? " · " + m[1] : "") : REF;
+    var parts = [];
+    if(REF){
+      var m = REF.match(/^makrinis(?:-(.+))?$/);
+      parts.push(m ? "MAKRINI'S" + (m[1] ? " · " + m[1] : "") : REF);
+    }
+    var a = [];
+    if(ADS.utm_source) a.push(ADS.utm_source);
+    if(ADS.utm_medium) a.push(ADS.utm_medium);
+    if(ADS.utm_campaign) a.push(ADS.utm_campaign);
+    if(!a.length && ADS.ads) a.push(ADS.ads);
+    if(a.length) parts.push(a.join("/"));
+    return parts.join(" · ");
   }
   function waLink(text){
     var tag = refLabel();
